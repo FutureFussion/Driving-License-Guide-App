@@ -329,6 +329,7 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:avtoskola_varketilshi/Models/exam_question_model.dart';
+import 'package:avtoskola_varketilshi/App Widegts/showTestPassedDialog.dart';
 
 class TicketsController extends GetxController {
   final questions = <ExamQuestionModel>[].obs;
@@ -338,13 +339,13 @@ class TicketsController extends GetxController {
   final RxInt wrongAnswersCount = 0.obs;
   final answeredQuestions = <int>{}.obs;
   late String category;
-  
+
   @override
   void onInit() {
     super.onInit();
     selectedAnswers.clear();
     category = Get.arguments as String? ?? 'B, B1';
-    _loadRandomQuestions(category);
+    _loadAllQuestions(category);
   }
 
   Future<List<ExamQuestionModel>> _loadAll(String path) async {
@@ -353,25 +354,16 @@ class TicketsController extends GetxController {
     return arr.map((e) => ExamQuestionModel.fromJson(e)).toList();
   }
 
-  Future<void> _loadRandomQuestions(String cat) async {
+  Future<void> _loadAllQuestions(String cat) async {
     final path = {
-      'B, B1':'assets/questions/B,B1_exam.json',
-      'C':'assets/questions/c_category.json',
-      'D':'assets/questions/d_category.json',
-      'T, S':'assets/questions/t_s_category.json'
+      'B, B1': 'assets/questions/B,B1_exam.json',
+      'C': 'assets/questions/c_category.json',
+      'D': 'assets/questions/d_category.json',
+      'T, S': 'assets/questions/t_s_category.json',
     }[cat] ?? 'assets/questions/B,B1_exam.json';
 
     final all = await _loadAll(path);
-    final rnd = Random();
-    final picked = <ExamQuestionModel>[];
-    final used = <int>{};
-
-    while (picked.length < 20 && used.length < all.length) {
-      final idx = rnd.nextInt(all.length);
-      if (used.add(idx)) picked.add(all[idx]);
-    }
-
-    questions.assignAll(picked);
+    questions.assignAll(all);
   }
 
   void selectOption(int idx) {
@@ -380,18 +372,37 @@ class TicketsController extends GetxController {
     selectedAnswers[currentIndex.value] = idx;
     answeredQuestions.add(currentIndex.value);
     final correct = questions[currentIndex.value].correctAnswer == idx;
-    if (correct) correctAnswersCount.value++;
-    else wrongAnswersCount.value++;
+    if (correct) {
+      correctAnswersCount.value++;
+    } else {
+      wrongAnswersCount.value++;
+    }
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (currentIndex.value < questions.length - 1) {
+        currentIndex.value++;
+      } else {
+        // Last question answered: show results
+        if (Get.context != null) {
+          showTestPassedDialog(
+            Get.context!,
+            totalQuestions: questions.length,
+            answeredQuestions: selectedAnswers.length,
+            correctAnswers: correctAnswersCount.value,
+          );
+        }
+      }
+    });
   }
 
   bool isCorrect(int i) {
     return selectedAnswers[currentIndex.value] == i &&
-      questions[currentIndex.value].correctAnswer == i;
+        questions[currentIndex.value].correctAnswer == i;
   }
 
   bool isWrong(int i) {
     return selectedAnswers[currentIndex.value] == i &&
-      questions[currentIndex.value].correctAnswer != i;
+        questions[currentIndex.value].correctAnswer != i;
   }
 
   void prevQuestion() {

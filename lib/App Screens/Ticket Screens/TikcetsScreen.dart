@@ -206,7 +206,6 @@ class TicketsScreen extends StatelessWidget {
           return Column(
             children: [
               const SizedBox(height: 10),
-              // Top Bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
@@ -222,7 +221,6 @@ class TicketsScreen extends StatelessWidget {
                 ),
               ),
 
-              // Question + optional image
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                 child: Container(
@@ -240,81 +238,24 @@ class TicketsScreen extends StatelessWidget {
                 ),
               ),
 
-              // Options
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
-                    children: List.generate(q.options.length, (i) {
+                    children: List.generate(q.options.length > 4 ? 4 : q.options.length, (i) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         child: ExamOptionTile(
                           index: i,
                           text: q.options[i],
-                          selected: false,
+                          selected: controller.selectedAnswers[controller.currentIndex.value] == i,
                           onTap: () => controller.selectOption(i),
                           isCorrect: controller.isCorrect(i),
                           isWrong: controller.isWrong(i),
-                          disableTap: controller.selectedAnswers.containsKey(controller.currentIndex.value), 
+                          disableTap: controller.selectedAnswers.containsKey(controller.currentIndex.value),
                         ),
                       );
                     }),
                   ),
-                ),
-              ),
-
-              // Bottom Navigation
-              Container(
-                color: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: controller.prevQuestion,
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.red),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: List.generate(controller.total, (i) {
-                            final sel = i == controller.currentIndex.value;
-                            return GestureDetector(
-                              onTap: () => controller.goToQuestion(i),
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
-                                width: 36,
-                                height: 36,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  color: sel ? Colors.red : Colors.white,
-                                  border: Border.all(color: Colors.red),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  '${i + 1}',
-                                  style: TextStyle(color: sel ? Colors.white : Colors.red, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        controller.nextQuestion();
-                        if (controller.currentIndex.value == controller.total - 1) {
-                          showTestPassedDialog(
-                            context,
-                            totalQuestions: controller.total,
-                            answeredQuestions: controller.answered,
-                            correctAnswers: controller.correct,
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.arrow_forward_ios, color: Colors.red),
-                    ),
-                  ],
                 ),
               ),
             ],
